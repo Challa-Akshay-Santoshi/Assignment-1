@@ -1,3 +1,7 @@
+# C. Akshay Santoshi
+# CS21BTECH11012
+# To find the mode of the given data
+
 import numpy as np
 import mpmath as mp
 import matplotlib.pyplot as plt
@@ -6,62 +10,86 @@ from statistics import median
 import pandas as pd
 from scipy.ndimage import shift
 
-fig,ax = plt.subplots(1,1)
-s= pd.read_excel(r'C:\Users\aksha\Documents\Book2.xlsx')
-print(s)
-s1 = df.to_numpy()
-X = np.block([s1[0]])
-X = np.array(X.tolist(), dtype=float)
+#local imports
+from line.funcs import *
+from triangle.funcs import *
+#from conics.funcs import circ_gen
+from conics.funcs import *
 
+#for creating lines
+def line_gen(A,B):
+  len =10
+  dim = A.shape[0]
+  x_AB = np.zeros((dim,len))
+  lam_1 = np.linspace(0,1,len)
+  for i in range(len):
+    temp1 = A + lam_1[i]*(B-A)
+    x_AB[:,i]= temp1.T
+  return x_AB
+ 
+I = np.eye(2)
+e2 = I[0:,1]
+
+#Input parameters from excel file 
 df= pd.read_excel(r'C:\Users\aksha\Documents\Book1.xlsx')
 print(df)
-dst = df.to_numpy()
+dst = df.to_numpy()[:,1:]
+nvalues = np.size(dst[0])-1
+
+#Creating numpy matrix of the given data
 A = np.block([[dst[0]],[dst[1]]])
 A = np.array(A.tolist(), dtype=float)
 Amax = np.amax(A[1])
+
+#Locating the index for the mode class
 imed = np.where(A[1]==Amax)
 imed = imed[0]
-
-ax.hist(X[0], A[0], ec="black")
-ax.set_title("histogram ")
-ax.set_xticks(A[0])
-ax.set_xlabel('Runs scored')
-ax.set_ylabel('No. of batsmen')
 
 P = np.array([A[0,imed],A[1,imed]])
 Q = np.array([A[0,imed-1],A[1,imed-1]])
 R = np.array([A[0,imed-1],A[1,imed]])
 S = np.array([A[0,imed],A[1,imed+1]])
 
-# to draw line segments
-x_values = [P[0], Q[0]]
-y_values = [P[1], Q[1]]
-plt.plot(x_values, y_values, "yellow")
+#Finding the mode 
+n1 = omat@(P-Q)
+n2 = omat@(R-S)
 
-x_values = [R[0], S[0]]
-y_values = [R[1], S[1]]
-plt.plot(x_values, y_values, "yellow")
 
-# annotating the points
-plt.annotate("P",P,xytext=(1,3),textcoords="offset points")
-plt.annotate("Q",Q,xytext=(-10,2),textcoords="offset points")
-plt.annotate("R",R,xytext=(-5,3),textcoords="offset points")
-plt.annotate("S",S,xytext=(0,1),textcoords="offset points")
+#Computing the mode
+M = line_intersect(n1.T,P,n2.T,R)
+Mx = np.array([M[0],0])
+print(Mx)
 
-m1=0.014
-m2=-0.009
-b1=-52
-b2=54
-xi = (b1-b2) / (m2-m1)
-yi = m1 * xi + b1
 
-# plotting mode point
-M=np.array([xi,yi])
-plt.annotate("M",M,xytext=(-12,0),textcoords="offset points")
+#Generating PQ and RS
+xPQ = line_gen(P,Q)
+xRS = line_gen(R,S)
 
-x_values = [xi, xi]
-y_values = [yi, 0]
-plt.plot(x_values, y_values, "orange")
+#generating the mode line
+xM = line_gen(M,Mx)
+
+
+#Plotting the bar graph for the data
+plt.bar(A[0,:],A[1,:],width=10)
+
+#Plotting the lines PQ and RS
+plt.plot(xPQ[0,:],xPQ[1,:],color='red')#,label='$Diameter$')
+plt.plot(xRS[0,:],xRS[1,:],color='orange')#,label='$Diameter$')
+
+#Plotting the Mode line
+plt.plot(xM[0,:],xM[1,:],color='yellow')#,label='$Diameter$')
+
+
+#Labeling the coordinates
+tri_coords = np.block([[P.T],[Q.T],[R.T],[S.T],[M],[Mx]]).T
+plt.scatter(tri_coords[0,:], tri_coords[1,:])
+vert_labels = ['P','Q','R','S','M','Mx']
+for i, txt in enumerate(vert_labels):
+    plt.annotate(txt, # this is the text
+                 (tri_coords[0,i], tri_coords[1,i]), # this is the point to label
+                 textcoords="offset points", # how to position the text
+                 xytext=(0,10), # distance from text to points (x,y)
+                 ha='center') # horizontal alignment can be left, right or center
 
 
 plt.show()
